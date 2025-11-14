@@ -84,6 +84,14 @@ Start-PodeServer {
         Write-PodeJsonResponse -Value $manifest
     }
     
+    # OpenAPI Specification Endpoint
+    Add-PodeRoute -Method Get -Path ('/openapi.yaml') -ScriptBlock {
+        Write-Host "OpenAPI specification accessed"
+        $openApiSpec = Get-Content -Path ($PSScriptRoot + '/openapi.yaml')  -Raw
+        #Set-PodeResponseContentType -Value "text/yaml"
+        Write-PodeJSONResponse -Value $openApiSpec
+    }
+    
     # Legacy Tool Endpoint: Run Command
     Add-PodeRoute -Method Post -Path '/tools/runCommand' -ScriptBlock {
         Write-Host "RunCommand endpoint accessed"

@@ -1,0 +1,189 @@
+openapi: 3.0.3
+info:
+  title: PowerShell MCP Server
+  description: A Model Context Protocol server providing PowerShell command execution in a sandboxed environment
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /test:
+    get:
+      summary: Test endpoint
+      description: Simple health check endpoint to verify the server is running
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Test endpoint working"
+        '500':
+          description: Internal server error
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /capabilities:
+    get:
+      summary: MCP Capabilities
+      description: Returns the capabilities supported by this MCP server
+      responses:
+        '200':
+          description: Capabilities information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  capabilities:
+                    type: object
+                    properties:
+                      tools:
+                        type: object
+                        properties:
+                          listChanged:
+                            type: boolean
+                            example: true
+
+  /tools/list:
+    get:
+      summary: List Available Tools
+      description: Returns a list of tools available through this MCP server
+      responses:
+        '200':
+          description: List of available tools
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tools:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        title:
+                          type: string
+                        description:
+                          type: string
+                        inputSchema:
+                          type: object
+
+  /manifest:
+    get:
+      summary: Legacy Manifest Endpoint
+      description: Returns legacy manifest information for backward compatibility
+      responses:
+        '200':
+          description: Manifest information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  protocols:
+                    type: array
+                    items:
+                      type: object
+
+  /tools/runCommand:
+    post:
+      summary: Execute PowerShell Command
+      description: Execute a PowerShell command and get structured output with results
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+                  description: The PowerShell command or script to execute
+                  example: "Get-Date"
+              required:
+                - command
+      responses:
+        '200':
+          description: Command execution results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  command:
+                    type: string
+                    description: The command that was executed
+                  success:
+                    type: boolean
+                    description: Whether the command executed successfully
+                  stdout:
+                    type: string
+                    description: Standard output from the command
+                    nullable: true
+                  stderr:
+                    type: object
+                    description: Standard error output and exception details
+                    nullable: true
+                  exitCode:
+                    type: integer
+                    description: Exit code (0 for success, 1 for error)
+                    nullable: true
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: Timestamp when the command was executed
+                  executionTimeMs:
+                    type: integer
+                    description: Execution time in milliseconds
+        '400':
+          description: Bad request (invalid JSON or missing command)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            text/html:
+              schema:
+                type: string
+
+components:
+  schemas:
+    CommandResult:
+      type: object
+      properties:
+        command:
+          type: string
+        success:
+          type: boolean
+        stdout:
+          type: string
+          nullable: true
+        stderr:
+          type: object
+          nullable: true
+        exitCode:
+          type: integer
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+        executionTimeMs:
+          type: integer
+
+  securitySchemes:
+    {}

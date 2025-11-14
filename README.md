@@ -41,6 +41,7 @@ The container includes:
 - Pode web framework for HTTP handling
 - Structured JSON response formatting
 - Built-in logging and error handling
+- **OpenAPI specification** at `/openapi.yaml` for API documentation
 
 ## 🤖 Connect to AI Assistants
 
@@ -120,6 +121,9 @@ curl http://localhost:8080/capabilities
 
 # List available tools
 curl http://localhost:8080/tools/list
+
+# View OpenAPI specification
+curl http://localhost:8080/openapi.yaml
 
 # Run a simple command
 curl -X POST http://localhost:8080/tools/runCommand \
