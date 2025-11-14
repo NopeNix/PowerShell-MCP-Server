@@ -6,13 +6,19 @@ Import-Module Pode
 Start-PodeServer {
     Add-PodeEndpoint -Address * -Port 8080 -Protocol Http
     
+    # Setup logging to terminal
+    New-PodeLoggingMethod -Terminal | Enable-PodeRequestLogging
+    New-PodeLoggingMethod -Terminal | Enable-PodeErrorLogging
+    
     # Simple test endpoint
     Add-PodeRoute -Method Get -Path '/test' -ScriptBlock {
+        Write-Host "Test endpoint accessed"
         Write-PodeJsonResponse -Value @{ message = "Test endpoint working" }
     }
     
     # MCP Capabilities Endpoint
     Add-PodeRoute -Method Get -Path '/capabilities' -ScriptBlock {
+        Write-Host "Capabilities endpoint accessed"
         $capabilities = @{
             capabilities = @{
                 tools = @{
@@ -25,6 +31,7 @@ Start-PodeServer {
     
     # MCP Tools List Endpoint
     Add-PodeRoute -Method Get -Path '/tools/list' -ScriptBlock {
+        Write-Host "Tools list endpoint accessed"
         $tools = @{
             tools = @(
                 @{
@@ -49,6 +56,7 @@ Start-PodeServer {
     
     # Legacy Manifest Endpoint (keep this working)
     Add-PodeRoute -Method Get -Path '/manifest' -ScriptBlock {
+        Write-Host "Manifest endpoint accessed"
         $manifest = @{
             protocols = @(
                 @{
@@ -78,6 +86,7 @@ Start-PodeServer {
     
     # Legacy Tool Endpoint: Run Command
     Add-PodeRoute -Method Post -Path '/tools/runCommand' -ScriptBlock {
+        Write-Host "RunCommand endpoint accessed"
         # Parse JSON body manually to ensure compatibility across clients
         $payload = $WebEvent.Data
         if ($WebEvent.Headers.'Content-Type' -and $WebEvent.Headers.'Content-Type' -like '*application/json*') {
@@ -87,6 +96,7 @@ Start-PodeServer {
                     $payload = $body | ConvertFrom-Json -ErrorAction Stop
                 }
                 catch {
+                    Write-Host "Invalid JSON in request body: $($_.Exception.Message)"
                     Write-PodeJsonResponse -StatusCode 400 -Value @{ error = "Invalid JSON in request body" }
                     return
                 }
@@ -96,11 +106,15 @@ Start-PodeServer {
         $command = $payload.command
         
         if (-not $command) {
+            Write-Host "Missing 'command' in request body"
             Write-PodeJsonResponse -StatusCode 400 -Value @{
                 error = "Missing 'command' in request body"
             }
             return
         }
+        
+        Write-Host "Executing command: $command"
+        
         $result = @{
             command           = $command
             success           = $false
@@ -142,6 +156,12 @@ Start-PodeServer {
             $result.stderr = if ($stderr) { $stderr } else { $null }
             $result.exitCode = if ($stderr) { 1 } else { 0 }
             $result.success = -not $stderr
+            
+            if ($stderr) {
+                Write-Host "Command executed with errors: $command"
+            } else {
+                Write-Host "Command executed successfully: $command"
+            }
         }
         catch {
             $sw.Stop()
@@ -156,8 +176,12 @@ Start-PodeServer {
             }
             $result.exitCode = 1
             $result.success = $false
+            
+            Write-Host "Command execution failed: $command - Error: $($_.Exception.Message)"
         }
         
         Write-PodeJsonResponse -Value $result
     }
+    
+    Write-Host "MCP Server started successfully"
 }

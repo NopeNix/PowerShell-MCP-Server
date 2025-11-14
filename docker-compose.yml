@@ -6,8 +6,6 @@ services:
     ports:
       - "8080:8080"
     restart: unless-stopped
-    # Optional: add network to internal-only Traefik zone
-    # networks:
-    #   - internal
-    # security_opt:
-    #   - no-new-privileges:true
+    # To view logs, use: docker logs mcp-command-server
+    # Logs are output to stdout/stderr and can be collected by Docker logging drivers
+    # Example: docker-compose logs -f mcp-command-server
