@@ -4,80 +4,142 @@
 [![Docker Image Size](https://img.shields.io/docker/image-size/nopenix/powershell-mcp-server/latest)](https://hub.docker.com/r/nopenix/powershell-mcp-server)
 [![License](https://img.shields.io/github/license/NopeNix/PowerShell-MCP-Server)](LICENSE)
 
-A self-hosted Model Context Protocol (MCP) server implemented in PowerShell using the Pode web framework. This lightweight service enables AI agents to discover and execute PowerShell commands in a structured, secure manner.
+A self-hosted Model Context Protocol (MCP) server that provides a sandboxed PowerShell environment for AI assistants.
 
 ## 🚀 Quick Start
 
 ```bash
-# Pull and run the pre-built Docker image
+# Run the server (it will be available at http://localhost:8080)
 docker run -d -p 8080:8080 --name mcp-server nopenix/powershell-mcp-server:latest
-
-# Or deploy with Docker Compose
-curl -O https://raw.githubusercontent.com/NopeNix/PowerShell-MCP-Server/main/docker-compose.yml
-docker-compose up -d
 ```
 
-## 🧩 About Model Context Protocol (MCP)
+That's it! Your server is now running and ready to connect to AI tools.
 
-The Model Context Protocol (MCP) is an emerging standard that enables AI systems to dynamically discover and interact with tools and services. This implementation provides:
+## 💡 What Is This For?
 
-- **Tool Discovery**: Automatic manifest generation for AI agent integration
-- **Structured I/O**: Consistent JSON input/output formats
-- **Error Handling**: Detailed error reporting with stack traces
-- **Performance Metrics**: Execution timing and resource utilization
-- **Logging**: Comprehensive request and error logging
+This server provides a **sandboxed PowerShell environment** that AI assistants can use to:
+
+- ✅ Run PowerShell commands in an isolated environment
+- ✅ Get organized results with success/failure information  
+- ✅ Handle errors gracefully and report them clearly
+- ✅ See command output in a format that's easy for AI to understand
+- ✅ Learn PowerShell syntax and capabilities
+
+**Important Note**: This runs in a **containerized, isolated environment** - it does NOT have direct access to your host system's files, processes, or resources. It's perfect for learning PowerShell, testing commands safely, or running PowerShell-specific tasks in a controlled environment.
+
+## 🏗️ Under The Hood
+
+This server is built on:
+- **Base Image**: Microsoft's official PowerShell Docker image (`mcr.microsoft.com/powershell:latest`)
+- **Web Framework**: [Pode](https://badgerati.github.io/Pode/) - A cross-platform PowerShell framework for REST APIs, Web Sites, and TCP/UDP servers
+- **Container Size**: Lightweight (~400MB) for fast downloads and minimal resource usage
+- **Isolation**: Runs in a secure container with no host filesystem access by default
+
+The container includes:
+- PowerShell 7+ with full .NET support
+- Common PowerShell modules pre-installed
+- Pode web framework for HTTP handling
+- Structured JSON response formatting
+- Built-in logging and error handling
+
+## 🤖 Connect to AI Assistants
+
+### OpenWebUI Integration
+
+1. Make sure your PowerShell MCP Server is running at `http://localhost:8080`
+2. In OpenWebUI, go to **Admin Settings → External Tools**
+3. Click **+ Add Server**
+4. Set **Type** to **MCP (Streamable HTTP)**
+5. Enter **Server URL**: `http://localhost:8080`
+6. Click **Save** and restart OpenWebUI if prompted
+
+Now you can ask OpenWebUI to run PowerShell commands!
+
+### VS Code Continue Integration
+
+1. Make sure your PowerShell MCP Server is running at `http://localhost:8080`
+2. In VS Code, open the Continue extension settings
+3. Add the MCP server to your configuration (specific steps may vary by Continue version)
+
+### Claude Desktop Integration
+
+1. Make sure your PowerShell MCP Server is running at `http://localhost:8080`  
+2. In Claude Desktop settings, look for "Tools" or "External Tools"
+3. Add a new MCP tool with URL: `http://localhost:8080`
+4. Save and restart Claude
+
+## 🔧 How to Use
+
+Once connected, you can ask your AI assistant to run PowerShell commands such as:
+
+```
+"Show me how to list files in PowerShell"
+"Generate a random password using PowerShell"
+"How do I work with JSON in PowerShell?"
+"Show me PowerShell examples for string manipulation"
+"What are the built-in PowerShell variables?"
+"Help me understand PowerShell pipelines"
+"What PowerShell commands are available for working with dates?"
+```
+
+Since this is a sandboxed environment, it's safe for experimentation and learning!
+
+## 🛡️ Security & Safety
+
+✅ **Sandboxed Environment**: Runs in an isolated container, protecting your host system
+✅ **Safe Experimentation**: Perfect for learning PowerShell without risk
+✅ **Controlled Access**: No direct access to host files or processes
+✅ **Clear Logging**: All commands executed are logged for visibility
 
 ## 📝 Logging
 
-This server implements comprehensive logging using Pode's built-in logging capabilities:
+The server provides comprehensive logging:
 
-- **Request Logging**: All HTTP requests are logged with status codes and response times
-- **Error Logging**: Errors in command execution are logged with detailed information
-- **Security Logging**: Potentially sensitive information (passwords, keys, secrets) is automatically masked
-- **Level-based Logging**: Different log levels (Info, Warn, Error) for various events
+- **Request Logging**: All HTTP requests with status codes
+- **Error Logging**: Detailed error information when commands fail
+- **Operation Logging**: Clear messages showing what's happening
 
-Logs are output to the terminal/stdout, making them easily accessible in Docker environments.
-
-Example log entries:
-```
-[INFO] Test endpoint accessed
-[INFO] Executing command: Get-Date
-[WARN] Missing 'command' in request body
-[ERROR] Invalid JSON in request body: Unexpected token ...
+To view logs:
+```bash
+# View container logs
+docker logs mcp-server
 ```
 
-## 🧪 Testing Endpoints
+Sensitive information in logs is automatically masked.
 
-You can test the server functionality with curl:
+## 🧪 Testing Your Setup
+
+You can test that your server is working with simple curl commands:
 
 ```bash
-# Test basic endpoint
+# Test basic connectivity
 curl http://localhost:8080/test
 
-# Check capabilities
+# Check available capabilities
 curl http://localhost:8080/capabilities
 
 # List available tools
 curl http://localhost:8080/tools/list
 
-# Check legacy manifest
-curl http://localhost:8080/manifest
-
-# Execute a command (be careful with this!)
+# Run a simple command
 curl -X POST http://localhost:8080/tools/runCommand \
   -H "Content-Type: application/json" \
   -d '{"command":"Get-Date"}'
 ```
 
-To view logs:
-```bash
-# Docker logs
-docker logs mcp-command-server
+## 🐳 Alternative Deployment
 
-# Or with docker-compose
-docker-compose logs -f
+If you prefer docker-compose:
+
+```bash
+# Download the compose file
+curl -O https://raw.githubusercontent.com/NopeNix/PowerShell-MCP-Server/main/docker-compose.yml
+
+# Start the service
+docker-compose up -d
 ```
 
-## 🔒 Security Notes
-
-Commands executed through this service run with the same permissions as the server process. Ensure proper isolation and access controls when deploying in production environments.
+To view logs with docker-compose:
+```bash
+docker-compose logs -f
+```
