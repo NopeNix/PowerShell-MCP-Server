@@ -5,20 +5,61 @@ Import-Module Pode
 
 Start-PodeServer {
     Add-PodeEndpoint -Address * -Port 8080 -Protocol Http
-    # MCP Manifest Endpoint
-    # Required for AI agent discovery
+    
+    # Simple test endpoint
+    Add-PodeRoute -Method Get -Path '/test' -ScriptBlock {
+        Write-PodeJsonResponse -Value @{ message = "Test endpoint working" }
+    }
+    
+    # MCP Capabilities Endpoint
+    Add-PodeRoute -Method Get -Path '/capabilities' -ScriptBlock {
+        $capabilities = @{
+            capabilities = @{
+                tools = @{
+                    listChanged = $true
+                }
+            }
+        }
+        Write-PodeJsonResponse -Value $capabilities
+    }
+    
+    # MCP Tools List Endpoint
+    Add-PodeRoute -Method Get -Path '/tools/list' -ScriptBlock {
+        $tools = @{
+            tools = @(
+                @{
+                    name = "runCommand"
+                    title = "PowerShell Command Executor"
+                    description = "Execute PowerShell commands and get structured output"
+                    inputSchema = @{
+                        type = "object"
+                        properties = @{
+                            command = @{
+                                type = "string"
+                                description = "The PowerShell command or script to execute"
+                            }
+                        }
+                        required = @("command")
+                    }
+                }
+            )
+        }
+        Write-PodeJsonResponse -Value $tools
+    }
+    
+    # Legacy Manifest Endpoint (keep this working)
     Add-PodeRoute -Method Get -Path '/manifest' -ScriptBlock {
         $manifest = @{
             protocols = @(
                 @{
                     name        = "command-execution"
-                    description = "Execute PowerShell commands on phil.laptop"
+                    description = "Execute PowerShell commands"
                     endpoints   = @(
                         @{
                             name        = "runCommand"
                             description = "Run a PowerShell command and get output + errors"
                             method      = "POST"
-                            url         = "http://phil.nbg.nopenix.de:8080/tools/runCommand"
+                            url         = "http://localhost:8080/tools/runCommand"
                             parameters  = @(
                                 @{
                                     name        = "command"
@@ -35,7 +76,7 @@ Start-PodeServer {
         Write-PodeJsonResponse -Value $manifest
     }
     
-    # MCP Tool Endpoint: Run Command
+    # Legacy Tool Endpoint: Run Command
     Add-PodeRoute -Method Post -Path '/tools/runCommand' -ScriptBlock {
         # Parse JSON body manually to ensure compatibility across clients
         $payload = $WebEvent.Data
