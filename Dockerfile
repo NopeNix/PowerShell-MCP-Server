@@ -1,5 +1,5 @@
 FROM mcr.microsoft.com/powershell:latest
-RUN pwsh -c "Install-Module Pode -Force -Scope CurrentUser"
+RUN pwsh -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; Install-Module -Name Pode -Force -Scope CurrentUser"
 WORKDIR /app
 COPY mcp-server.ps1 .
 EXPOSE 8080
