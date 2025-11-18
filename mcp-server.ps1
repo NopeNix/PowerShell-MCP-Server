@@ -11,7 +11,7 @@ Start-PodeServer {
     New-PodeLoggingMethod -Terminal | Enable-PodeErrorLogging
     
     # Simple test endpoint
-    Add-PodeRoute -Method Get -Path '/test' -ScriptBlock {
+    Add-PodeRoute -Method Get, Post -Path '/test' -ScriptBlock {
         Write-Host "Test endpoint accessed"
         Write-PodeJsonResponse -Value @{ message = "Test endpoint working" }
     }
@@ -30,7 +30,7 @@ Start-PodeServer {
     }
     
     # MCP Tools List Endpoint
-    Add-PodeRoute -Method Get -Path '/tools/list' -ScriptBlock {
+    Add-PodeRoute -Method Get, Post -Path '/tools/list' -ScriptBlock {
         Write-Host "Tools list endpoint accessed"
         $tools = @{
             tools = @(
@@ -55,7 +55,7 @@ Start-PodeServer {
     }
     
     # Legacy Manifest Endpoint (keep this working)
-    Add-PodeRoute -Method Get -Path '/manifest' -ScriptBlock {
+    Add-PodeRoute -Method Get, Post -Path '/manifest' -ScriptBlock {
         Write-Host "Manifest endpoint accessed"
         $manifest = @{
             protocols = @(
@@ -85,7 +85,7 @@ Start-PodeServer {
     }
     
     # OpenAPI Specification Endpoint
-    Add-PodeRoute -Method Get -Path ('/openapi.yaml') -ScriptBlock {
+    Add-PodeRoute -Method Get, Post -Path ('/openapi.yaml') -ScriptBlock {
         Write-Host "OpenAPI specification accessed"
         $openApiSpec = Get-Content -Path ($PSScriptRoot + '/openapi.yaml')  -Raw
         #Set-PodeResponseContentType -Value "text/yaml"
